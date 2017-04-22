@@ -3,7 +3,7 @@ package one;
 import java.util.ArrayList;
 import java.util.Date;
 
-public class User {
+public abstract class User {
 	protected String firstName;
 	protected String lastName;
 	protected String customerID;  
@@ -182,4 +182,15 @@ public class User {
 			return false;
 	}
 	
+	/*abstract methods going to be used in customer class 
+	**hierarchy will be user - customer - administrator 
+	since administrator can do things customer can and more*/
+	
+	public abstract Flight[] searchFlightByCityPair(String departureCity, String arrivalCity);
+	
+	public abstract Flight[] searchFlightByDepartureCityAndDepartureDate(String departureCity, Date date);
+	
+	public abstract Reservation bookFlight(Flight flight);
+	
+	public abstract boolean cancelReservation(Reservation reservation) throws Exception;
 }
