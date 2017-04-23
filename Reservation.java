@@ -1,3 +1,4 @@
+package CSKAirlines;
 //Reservation class represents Customer's ticekts 
 public class Reservation implements Persistable{
 	protected Customer customer;
