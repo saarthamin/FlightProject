@@ -19,9 +19,19 @@ public class Flight implements Persistable {
 	}
 
 	/*
-	** Need to write search flights methods
+	** Need to write get flights methods - will get them from DB class
 	*/
+	public static Flight[] getFlightByNumberAndDepartureDate(int flightNumber, Date departureDate){
+		
+	}
 	
+	public static Flight[] getFlightByDepartureCityAndDate(String departureCity, Date departureDate){
+		
+	}
+	
+	public static Flight[] getFlightByDepartureCityAndArrivalCity(String departureCity, String arrivalCity){
+		
+	}
 
 	public boolean isEqual(Flight other) {
 		if(
