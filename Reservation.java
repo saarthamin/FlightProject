@@ -1,7 +1,8 @@
+//Reservation class represents Customer's ticekts 
 public class Reservation implements Persistable{
 	protected Customer customer;
 	protected Flight flight;
-	protected boolean _isDirty = false;
+	protected boolean _isDirty = false;//see if we need to update Reservation in DB
 	protected long reservationNumber;  // Unique reservation number across the system
 	
 	public Reservation(long reservationNumber, Customer customer, Flight flight){
