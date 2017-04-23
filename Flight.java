@@ -1,3 +1,4 @@
+package CSKAirlines;
 public class Flight implements Persistable {
 	protected String departureCity;
 	protected String arrivalCity;
