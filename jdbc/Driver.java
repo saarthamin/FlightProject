@@ -1,39 +1,67 @@
-package jdbc;
-
-import java.sql.DriverManager;
+package CSKAirlines;
 
 import java.sql.*;
 
 public class Driver {
 
-	public static void main(String[] args) {
-		
-		Connection connection = null;
-		String dburl = "jdbc:mysql://192.168.2.105:3306/CSKAirlines?autoReconnect=true&useSSL=false";
-		String userName = "CSKAirlines";
-		String passWord = "3270!?ChungSaarthKrishna.";
+	// String dburl = "jdbc:mysql://192.168.2.105:3306/CSKAirlines?autoReconnect=true&useSSL=false";
+	final static String dburl = "jdbc:mysql://127.0.0.1:3306/CSKAirlines?useSSL=false";
+	final static String userName = "CSKAirlines";
+	final static String passWord = "3270!?ChungSaarthKrishna.";
+	static private Connection connection = null;
 
-
-
-		 try {
-			 	//this part doesn't work because i don't have a table named Example, but if you get "Database connection terminated" then i think we're good to go
-		        Class.forName("com.mysql.jdbc.Driver");
-
-		        connection = DriverManager.getConnection(dburl, userName, passWord);
-		        Statement st = connection.createStatement();                                 
-
-		        String query = "INSERT INTO Example (`TestColumn`) VALUES('hello')";
-		        int rsI = st.executeUpdate(query);
-		        System.out.println("Hi");
-		        }catch (Exception e) {
-		        System.out.println(e);
-		    } finally {
-		        if (connection != null) {
-		            try {
-		                connection.close();
-		                System.out.println("Database connection terminated");
-		            } catch (Exception e) { /* ignore close errors */ }
-		        }
-		    }
+	public static void init() {// establishes a connection
+		try {
+			if (connection == null) {
+				Class.forName("com.mysql.jdbc.Driver");
+				connection = DriverManager.getConnection(dburl, userName, passWord);
+			}
+		} catch (Exception e) {
+			System.err.println("Exception while connecting to DB " + e);
+		}
+		return;
 	}
+
+	public static ResultSet executeQuery(String query) throws SQLException {
+		try {
+			Statement statement = connection.createStatement();
+			System.out.println("Executing query " + query);
+			return statement.executeQuery(query);
+		} catch (Exception e) {
+			System.err.println("Exception while executing query " + query + " Error " + e);
+		}
+		// dont close statement because ResultSet would automatically close
+		return null;
+	}
+
+	public static boolean executeInsert(String query) throws SQLException {
+		Statement statement = null;
+		try {
+			statement = connection.createStatement();
+			System.out.println("Executing query " + query);
+			return statement.execute(query);
+		} catch (Exception e) {
+			System.err.println("Exception while executing query " + query + " Error " + e);
+		} finally {
+			if (statement != null)
+				statement.close();
+		}
+		return false;
+	}
+
+	public static boolean executeDelete(String query) throws SQLException {
+		Statement statement = null;
+		try {
+			statement = connection.createStatement();
+			System.out.println("Executing query " + query);
+			return statement.execute(query);
+		} catch (Exception e) {
+			System.err.println("Exception while executing query " + query + " Error " + e);
+		} finally {
+			if (statement != null)
+				statement.close();
+		}
+		return false;
+	}
+
 }
