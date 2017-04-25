@@ -11,17 +11,18 @@ import java.sql.*;
 */
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+final String ins = "', '";
 
 public class DB {
 	
 	
-	long nextReservationNumber = 1;
+	int nextReservationNumber = 1;
 	
 	/*
 	** User CRUD operations
 	*/
 	public void create(User user) {
-		  int isAdmin = user instanceof Administrator ? 1 : 0;//1 = Admin, 0 = Customer
+		int isAdmin = user instanceof Administrator ? 1 : 0;//1 = Admin, 0 = Customer
         
 		String query = "INSERT INTO USER (USERNAME, PASSWORD, SECURITY_QUESTION, SECURITY_ANSWER, FIRST_NAME, LAST_NAME, SSN, ADDRESS, ZIP_CODE, STATE, EMAIL, IS_ADMIN) VALUES" +
 					   "('" + user.getUsername() + ins + user.getPassword() + ins + user.getSecurityQuestion() + ins + user.getSecurityQuestionAnswer() + ins + user.getFirstName() + ins
@@ -73,7 +74,7 @@ public class DB {
 		String query = "SELECT FIRST_NAME, LAST_NAME, ADDRESS, ZIP_CODE, STATE, USERNAME, PASSWORD, EMAIL, SSN, IS_ADMIN from USER WHERE USERNAME = '" + id + "'";
 		try {
 			ResultSet rs = Driver.executeQuery(query);//catches exception from Driver
-			if(rs.next())//see if Users are in rs
+			if(rs.next())//see if Users are in rs - cursur starts before first row
 				user = createUser(rs);//Exception from createUser
 			rs.close();//make room for other resources - connection and memory 
 		} catch(SQLException e) {
@@ -109,49 +110,153 @@ public class DB {
 	*/
 	public void create(Flight flight){
 		//add flight to database
-		
+		String query = "INSERT INTO FLIGHT (FLIGHT_NUM, DEPARTURE_CITY, DEPARTURE_TIME, ARRIVAL_CITY, ARRIVAL_TIME, CAPACITY) VALUE" +
+						"('" + flight.getFlightNumber() + ins + flight.getDepartureCity() + ins + flight.getDepartureTime() + ins + flight.getArrivalCity() + 
+						ins + flight.getArrivalTime() + ins + flight.getCapacity() + "');";
+		try {
+			Driver.executeInsert(query);
+		} catch(Exception e) {
+        		System.err.println("Exception while inserting flight"+e);
+		}
 	}
 	
 	private Flight createFlight(ResultSet rs) throws SQLException {
+		Flight flight = null;
+		flight = new Flight(rs.getString("DEPARTURE_CITY"), rs.getString("ARRIVAL_CITY"), rs.getTimestamp("DEPARTURE_TIME").getTime(), 
+					rs.getTimestamp("ARRIVAL_TIME").getTime(), rs.getInt("FLIGHT_NUM"), rs.getInt("CAPACITY"));//creates flight from database
 		
+		return flight;
 	}
 	
 	
 	
 	
-	public  Flight getFlightByDepartureCityAndDateAndNumber(String departureCity, Date departureDate, int flightNumber){
-		
+	public  Flight getFlightByDepartureCityAndDateAndNumber(String departureCity, Date departureDate, int flightNumber){//same logic when getting User from database
+		Flight flight = null;//have to create flight outside of try
+				   
+		String query = "SELECT FLIGHT_NUM, DEPARTURE_CITY, DEPARTURE_TIME, ARRIVAL_CITY, ARRIVAL_TIME, CAPACITY from FLIGHT WHERE DEPARTURE_CITY = '" + 
+						departureCity + "' AND " + "DEPARTURE_TIME = '" + departureDate + "' AND " + "FLIGHT_NUM = '" + flightNumber + "'";
+		try{
+			ResultSet rs = Driver.executeQuery(query);
+			if(rs.next())
+				flight = createFlight(rs);
+			rs.close();
+		}catch(SQLException e) {
+			System.err.println("Exception while getting Flight " + e);
+		}
+		return flight;
 	}
 	
-	
+	public Flight[] getFlights(String query){//used in next 4 methods to get array of Flights based on query
+		ArrayList<Flight> flights = new ArrayList<Flight>();
+		try{
+			ResultSet rs = Driver.executeQuery(query);
+			while(rs.next())//gets all flights in rs including 1st
+				flights.add(createFlight(rs));//creates flight and adds to ArrayList
+			rs.close();
+		}catch(SQLException e) {
+			System.err.println("Exception while getting Flight " + e);
+		}
+		return flights.toArray(new Flight[0]);//returns an array of the flights which were in the ArrayList, instead of making whole new array 
+	}
 	
 	public Flight[] getFlightByNumberAndDepartureDate(int flightNumber, Date departureDate){//next 4 methods returns array b/c more than 1 flight can have same characteristics
 		
+		String query = "SELECT FLIGHT_NUM, DEPARTURE_CITY, DEPARTURE_TIME, ARRIVAL_CITY, ARRIVAL_TIME, CAPACITY from FLIGHT WHERE FLIGHT_NUM = '" + 
+						flightNumber + "' AND " + "DEPARTURE_TIME = '" + departureDate + "'";
+		return getFlights(query);
 	}
 	
 	public Flight[] getFlightByDepartureCityAndDate(String departureCity, Date departureDate){
 		
+		String query = "SELECT FLIGHT_NUM, DEPARTURE_CITY, DEPARTURE_TIME, ARRIVAL_CITY, ARRIVAL_TIME, CAPACITY from FLIGHT WHERE DEPARTURE_CITY = '" + 
+						departureCity + "' AND " + "DEPARTURE_TIME = '" + departureDate + "'";
+		return getFlights(query);
 	}
 	
 	public  Flight[] getFlightByDepartureCityAndArrivalCity(String departureCity, String arrivalCity){
-		
+		String query = "SELECT FLIGHT_NUM, DEPARTURE_CITY, DEPARTURE_TIME, ARRIVAL_CITY, ARRIVAL_TIME, CAPACITY from FLIGHT WHERE DEPARTURE_CITY = '" + 
+						departureCity + "' AND " + "ARRIVAL_CITY = '" + arrivalCity + "'";
+		return getFlights(query);
 	}
 	public  Flight[] getAllFlights() {
-		
+		String query = "SELECT FLIGHT_NUM, DEPARTURE_CITY, DEPARTURE_TIME, ARRIVAL_CITY, ARRIVAL_TIME, CAPACITY from FLIGHT";
+		return getFlights(query);
 	}
 	
-	public void update(Flight flight){//like in update Customer - the flight is passed in with updated 
-		
+	public void update(Flight flight){//like in update User - the flight is passed in with updated - same logicc
+		String query = "UPDATE FLIGHT SET DEPARTURE_CITY = '" + flight.getDepartureCity() + "', DEPARTURE_TIME = '" + flight.getDepartureTime() + "', ARRIVAL_CITY = '" + 
+						flight.getArrivalCity() + "', ARRIVAL_TIME = '" + flight.getArrivalTime() + "', CAPACITY = '" + flight.getCapacity() + "' WHERE FLIGHT_NUM = '" + 
+						flight.getFlightNumber() + "'";
+		try{
+			Driver.executeUpdate(query);
+		}catch(Exception e) {
+			System.err.println("Exception while updating flight" + e);
+		}
 	}
 	
-	public  void delete(Flight flight){
-		
+	public void delete(Flight flight){
+		String query = "DELETE FROM FLIGHT WHERE DEPARTURE_CITY = '" + 
+						flight.getDepartureCity() + "' AND " + "DEPARTURE_TIME = '" + flight.getDepartureTime() + "' AND " + "FLIGHT_NUM = '" + flight.getFlightNumber() + "';";
+		try{
+			Driver.executeDelete(query);
+			remove(flight);
+		}catch(Exception e) {
+			System.err.println("Exception while deleting Flight" + e);
+		}
 	}
 
 
 	/*
-	** Reservation CRUD operations
+	** Reservation CRUD operations - same logic as in flight 
 	*/
+	public void create(Reservation reservation){//create Reservation in database
+	
+	}
+	
+	public Reservation createReservation(ResultSet rs) throws SQLException {//create Reservation from query 
+	
+	}
+	
+	public Reservation getReservationByNumber(int reservationNumber){
+		
+	}
+	
+	public Reservation[] getReservations(String query){
+		
+	}
+	
+	public Reservation[] getReservationsByCustomer(User user){
+		
+	}
+	
+	public  Reservation[] getReservationsByFlight(Flight flight){
+	
+	}
+	
+	public void update(Reservation reservation){
+		String query = "UPDATE RESERVATION SET USERNAME = '" + reservation.getCustomer().getUsername() + "', FLIGHT_NUM = '" + reservation.getFlight().getFlightNumber() + "' WHERE RESERVATION_NUM = '" + reservation.getReservationNumber() + "'";
+		try{
+			Driver.executeUpdate(query);
+		}catch(Exception e) {
+			System.err.println("Exception while updating reservation" + e);
+		}
+	}
+	
+	public void delete(Reservation reservation){
+		String query = "DELETE FROM RESERVATION WHERE RESERVATION_NUM = '" + reservation.getReservationNumber() + "';";
+		try{
+			Driver.executeDelete(query);
+		}catch(Exception e) {
+			System.err.println("Exception while deleting reservation" + e);
+		}
+	}
+	
+	
+	
+	
+	
+	
 	
 	
 }
