@@ -1,0 +1,56 @@
+Administrator 
++ Adminstrator(firstName: String,lastName: String, address:String, zipCode: String, state: String, username: String, password: String, email: String, SSN: String ) 
++ createFlight(departureCity: String, arrivalCity:String, departureTime: Date, arrivalTime: Date, flightNumber: int, capacity: int):Flight
++updateDepartureCity(flight: Flight,departureCity: String): void
++updateArrivalCity(flight: Flight, arrivalCity:String): void
++updateDepartureTime(flight:Flight, departureTime:Date): void
++updateArrivalTime(flight: Flight, arrivalTime :Date): void
++deleteFlight(flight: flight): boolean
+
+
+Customer
++ Customer(firstName: String,lastName: String, address:String, zipCode: String, state: String, username: String, password: String, email: String, SSN: String )
++searchFlightByCityPair(departureCity: String, arrivalCity: String): Flight[]
++searchFlightByDepartureCityAndDepartureDate(String departureCity, date: Date): Flight[]
++getFlightByDepartureCityAndDateAndNumber(departureCity:
+String, departureDate: Date,flightNumber: int): Flight[]
++isAllowed(depA: Date , arrA: Date,  depB: Date, arrB: Date) : boolean
++bookFlight(flight: Flight): Reservation
++cancelReservation(reservation: Reservation): boolean
+
+
+User
+#firstName: String
+#lastName: String
+#address: String
+#zipCode: String
+#state: String
+#username: String
+#password: String
+#email: String
+#SSN: String
+#securityQuestion: String
+# securityQuestionAnswer: String
+# bookedFlights: ArrayList<Reservation>
+# _isDirty: boolean
+methods
++User
++User(firstName: String,lastName: String, address:String, zipCode: String, state: String, username: String, password: String, email: String, SSN: String)
++isDirty(): Boolean
++save(): void
++isIDExists(id:String): Boolean
++getUserByID(id: String): User
+//getters and setters left out for brevity
++getBookedFlights(): Reservation[]
++addBookedFlight(reservation: Reservation): void
++isEqual(other: User): Boolean
++toString(): String
++searchFlightByCityPair(departureCity: String, arrivalCity: String): Flight[]
++searchFlightByDepartureCityAndDepartureDate(departureCity: String, departureDate: Date): Flight[]
++getFlightByDepartureCityAndDateAndNumber(departureCity: String, departureDate: Date, flightNumber: int)
++bookFlight(flight: Flight): Reservation
++cancelReservation(reservation: Reservation): boolean
+
+
+
+
