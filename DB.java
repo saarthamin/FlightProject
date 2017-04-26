@@ -211,27 +211,80 @@ public class DB {
 	** Reservation CRUD operations - same logic as in flight 
 	*/
 	public void create(Reservation reservation){//create Reservation in database
-	
+		String depDt = datetimeFormat.format(reservation.getFlight().getDepartureTime())+":00";
+		
+		String query = "INSERT INTO RESERVATION (RESERVATION_NUM, USERNAME, FLIGHT_NUM, DEPARTURE_CITY, DEPARTURE_TIME) VALUE" + "('" + reservation.getReservationNumber() + ins + 
+						reservation.getCustomer().getUsername() + ins + reservation.getFlight().getFlightNumber() + ins + reservation.getFlight().getDepartureCity() + ins + 
+						depDt +  "')";
+        // Need to return reservation number
+		String getQuery = "SELECT RESERVATION_NUM FROM RESERVATION WHERE USERNAME = '" + reservation.getCustomer().getUsername() + "' AND FLIGHT_NUM = "  + reservation.getFlight().getFlightNumber() + " AND DEPARTURE_CITY = '" +
+			reservation.getFlight().getDepartureCity() + "' AND DEPARTURE_TIME = '" + depDt + "'";
+
+		try {
+			Driver.executeInsert(query);
+			ResultSet rs = Driver.executeQuery(getQuery);
+			if(rs.next()) {
+				int resNum = rs.getInt("RESERVATION_NUM");
+				reservation.reservationNumber = resNum;
+			}
+			rs.close();
+		} catch(Exception e) {
+        	System.err.println("Exception while inserting flight"+e);
+		}
 	}
 	
 	public Reservation createReservation(ResultSet rs) throws SQLException {//create Reservation from query 
-	
+		Reservation reservation = null;
+		User user = DB.getInstance().getUserByID(rs.getString("USERNAME"));
+
+		Date depDt = new Date(rs.getTimestamp("DEPARTURE_TIME").getTime());
+		Flight flight = DB.getInstance().getFlightByDepartureCityAndDateAndNumber(rs.getString("DEPARTURE_CITY"), depDt, rs.getInt("FLIGHT_NUM"));
+		flight.reservations.add(reservation);
+        user.addBookedFlight(reservation);
+		reservation = new Reservation(rs.getInt("RESERVATION_NUM"), (Customer)user , flight);
+		add(reservation);
+		return reservation;
 	}
 	
-	public Reservation getReservationByNumber(int reservationNumber){
-		
+	public  Reservation getReservationByNumber(int reservationNumber){
+		Reservation reservation = null;
+		String query = "SELECT RESERVATION_NUM, USERNAME, FLIGHT_NUM, DEPARTURE_CITY, DEPARTURE_TIME from RESERVATION WHERE RESERVATION_NUM = '" + reservationNumber + "'";
+		try{
+			ResultSet rs = Driver.executeQuery(query);
+			reservation = createReservation(rs);
+			rs.close();
+		}catch(SQLException e) {
+			System.err.println("Exception while getting Reservation " + e);
+		}
+		return reservation;
 	}
 	
-	public Reservation[] getReservations(String query){
-		
+	public Reservation[] getReservations(String query) {
+		ArrayList<Reservation> reservations = new ArrayList<Reservation>();
+		try{
+			ResultSet rs = Driver.executeQuery(query);
+			while(rs.next())
+				reservations.add(createReservation(rs));
+			rs.close();
+		}catch(SQLException e) {
+			System.err.println("Exception while getting Reservations " + e);
+		}
+		return reservations.toArray(new Reservation[0]);
 	}
 	
-	public Reservation[] getReservationsByCustomer(User user){
-		
+	public  Reservation[] getReservationsByCustomer(User user){//Customer may have more than 1 Reservation - flight booking
+		String query = "SELECT RESERVATION_NUM, USERNAME, FLIGHT_NUM, DEPARTURE_CITY, DEPARTURE_TIME from RESERVATION WHERE USERNAME = '" + user.getUsername() + "'"; 
+		return getReservations(query);
 	}
+	
 	
 	public  Reservation[] getReservationsByFlight(Flight flight){
-	
+
+		String depDt = datetimeFormat.format(flight.getDepartureTime())+":00";
+		
+		String query = "SELECT RESERVATION_NUM, USERNAME, FLIGHT_NUM, DEPARTURE_CITY, DEPARTURE_TIME from RESERVATION WHERE DEPARTURE_CITY = '" 
+				+ flight.getDepartureCity() + "' AND " + "DEPARTURE_TIME = '" + depDt + "' AND " + "FLIGHT_NUM = '" + flight.getFlightNumber() + "'";
+		return getReservations(query);
 	}
 	
 	public void update(Reservation reservation){
